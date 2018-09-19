@@ -131,7 +131,9 @@ export default function svelte(options = {}) {
 
 	let css = options.css && typeof options.css === 'function'
 		? options.css
-		: null;
+		: options.css === true
+			? function noop(){}
+			: null;
 
 	const cssLookup = new Map();
 
@@ -206,12 +208,13 @@ export default function svelte(options = {}) {
 
 				if ((css || options.emitCss) && compiled.css.code) {
 					let fname = id.replace('.html', '.css');
+					let importPath = fname.replace(/\\/g, '\\\\');
 
 					if (options.emitCss) {
 						const source_map_comment = `/*# sourceMappingURL=${compiled.css.map.toUrl()} */`;
 						compiled.css.code += `\n${source_map_comment}`;
 
-						compiled.js.code += `\nimport '${fname}';\n`;
+						compiled.js.code += `\nimport '${importPath}';\n`;
 					}
 
 					cssLookup.set(fname, compiled.css);
@@ -239,7 +242,7 @@ export default function svelte(options = {}) {
 						sources.push(chunk.map.sources[0]);
 						sourcesContent.push(chunk.map.sourcesContent[0]);
 
-						const decoded = decode(chunk.map.mappings);
+						const decoded = chunk.map.mappings;
 
 						if (i > 0) {
 							decoded.forEach(line => {
